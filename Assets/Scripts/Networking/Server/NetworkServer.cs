@@ -8,42 +8,42 @@ using UnityEngine;
 
 public class NetworkServer : IDisposable
 {
-    public Action<string> OnClientLeft;
-
-    public Action<GameData> OnUserJoined;
-    public Action<GameData> OnUserLeft;
-
     private NetworkManager networkManager;
-
     private NetworkObject playerPrefab;
 
-    private Dictionary<ulong, string> clientIdToAuth = new Dictionary<ulong, string>();
-    private Dictionary<string,GameData> authIdToUserdata = new Dictionary<string,GameData>();
+    public Action<UserData> OnUserJoined;
+    public Action<UserData> OnUserLeft;
 
-    public NetworkServer(NetworkManager networkManager,NetworkObject playerPrefab)
+    public Action<string> OnClientLeft;
+
+    private Dictionary<ulong, string> clientIdToAuth = new Dictionary<ulong, string>();
+    private Dictionary<string, UserData> authIdToUserData = new Dictionary<string, UserData>();
+
+    public NetworkServer(NetworkManager networkManager, NetworkObject playerPrefab)
     {
         this.networkManager = networkManager;
-
         this.playerPrefab = playerPrefab;
 
         networkManager.ConnectionApprovalCallback += ApprovalCheck;
         networkManager.OnServerStarted += OnNetworkReady;
     }
 
-    public bool OpenConnection(string ip,int port)
+    public bool OpenConnection(string ip, int port)
     {
         UnityTransport transport = networkManager.gameObject.GetComponent<UnityTransport>();
         transport.SetConnectionData(ip, (ushort)port);
         return networkManager.StartServer();
     }
-    private void ApprovalCheck(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+
+    private void ApprovalCheck(
+        NetworkManager.ConnectionApprovalRequest request,
+        NetworkManager.ConnectionApprovalResponse response)
     {
         string payload = System.Text.Encoding.UTF8.GetString(request.Payload);
-        GameData userData = JsonUtility.FromJson<GameData>(payload);
+        UserData userData = JsonUtility.FromJson<UserData>(payload);
 
         clientIdToAuth[request.ClientNetworkId] = userData.userAuthId;
-        authIdToUserdata[userData.userAuthId] = userData;
-
+        authIdToUserData[userData.userAuthId] = userData;
         OnUserJoined?.Invoke(userData);
 
         _ = SpawnPlayerDelayed(request.ClientNetworkId);
@@ -56,7 +56,8 @@ public class NetworkServer : IDisposable
     {
         await Task.Delay(1000);
 
-        NetworkObject playerInstance = GameObject.Instantiate(playerPrefab, SpawnPoint.GetRandomSpawnPos(), Quaternion.identity);
+        NetworkObject playerInstance =
+            GameObject.Instantiate(playerPrefab, SpawnPoint.GetRandomSpawnPos(), Quaternion.identity);
 
         playerInstance.SpawnAsPlayerObject(clientId);
     }
@@ -68,34 +69,33 @@ public class NetworkServer : IDisposable
 
     private void OnClientDisconnect(ulong clientId)
     {
-        if (clientIdToAuth.TryGetValue(clientId,out string authId))
+        if (clientIdToAuth.TryGetValue(clientId, out string authId))
         {
             clientIdToAuth.Remove(clientId);
-            OnUserLeft?.Invoke(authIdToUserdata[authId]);
-            authIdToUserdata.Remove(authId);
+            OnUserLeft?.Invoke(authIdToUserData[authId]);
+            authIdToUserData.Remove(authId);
             OnClientLeft?.Invoke(authId);
         }
     }
 
-    public GameData GetUserDataByClientId(ulong clientId)
+    public UserData GetUserDataByClientId(ulong clientId)
     {
         if (clientIdToAuth.TryGetValue(clientId, out string authId))
         {
-            if (authIdToUserdata.TryGetValue(authId,out GameData data))
+            if (authIdToUserData.TryGetValue(authId, out UserData data))
             {
                 return data;
             }
+
             return null;
         }
+
         return null;
     }
 
     public void Dispose()
     {
-        if (networkManager == null)
-        {
-            return;
-        }
+        if (networkManager == null) { return; }
 
         networkManager.ConnectionApprovalCallback -= ApprovalCheck;
         networkManager.OnClientDisconnectCallback -= OnClientDisconnect;
@@ -103,7 +103,7 @@ public class NetworkServer : IDisposable
 
         if (networkManager.IsListening)
         {
-            networkManager.Shutdown();  
+            networkManager.Shutdown();
         }
     }
 }

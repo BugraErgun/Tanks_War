@@ -12,9 +12,9 @@ public abstract class Coin : NetworkBehaviour
 
     public abstract int Collect();
 
-    public void SetValue(int coinValue)
+    public void SetValue(int value)
     {
-        this.coinValue = coinValue;
+        coinValue = value;
     }
 
     protected void Show(bool show)

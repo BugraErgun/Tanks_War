@@ -1,22 +1,19 @@
-using UnityEngine;
 using System.Threading.Tasks;
-using Unity.Services.Core;
 using Unity.Netcode;
-
+using Unity.Services.Core;
+using UnityEngine;
 
 public class ServerSingleton : MonoBehaviour
 {
     private static ServerSingleton instance;
 
     public ServerGameManager GameManager { get; private set; }
+
     public static ServerSingleton Instance
     {
         get
         {
-            if (instance != null)
-            {
-                return instance;
-            }
+            if (instance != null) { return instance; }
 
             instance = FindObjectOfType<ServerSingleton>();
 
@@ -27,8 +24,8 @@ public class ServerSingleton : MonoBehaviour
 
             return instance;
         }
-
     }
+
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -44,7 +41,7 @@ public class ServerSingleton : MonoBehaviour
             ApplicationData.QPort(),
             NetworkManager.Singleton,
             playerPrefab
-            );
+        );
     }
 
     private void OnDestroy()

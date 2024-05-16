@@ -32,7 +32,7 @@ public class MatchplayMatchmaker : IDisposable
 
     public bool IsMatchmaking { get; private set; }
 
-    public async Task<MatchmakingResult> Matchmake(GameData data)
+    public async Task<MatchmakingResult> Matchmake(UserData data)
     {
         cancelToken = new CancellationTokenSource();
 

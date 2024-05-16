@@ -3,56 +3,57 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-using static UnityEngine.ParticleSystem;
-
 public class PlayerMovement : NetworkBehaviour
 {
-    [Header("Referances")]
+    [Header("References")]
     [SerializeField] private InputReader inputReader;
-    [SerializeField] private Transform bodyTranform;
+    [SerializeField] private Transform bodyTransform;
     [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private ParticleSystem dustCloud;
-    
+    [SerializeField] private ParticleSystem dustTrail;
 
     [Header("Settings")]
     [SerializeField] private float movementSpeed = 4f;
-    [SerializeField] private float turningRate = 270f;
-    [SerializeField] private float particleEmissionValue = 10f;
+    [SerializeField] private float turningRate = 30f;
+    [SerializeField] private float emissionRate = 10f;
 
+    private ParticleSystem.EmissionModule emissionModule;
     private Vector2 previousMovementInput;
     private Vector3 previousPos;
 
     private const float ParticleStopThreshhold = 0.005f;
 
-    private ParticleSystem.EmissionModule emissionModule;
-
     private void Awake()
     {
-        emissionModule = dustCloud.emission;
+        emissionModule = dustTrail.emission;
     }
+
     public override void OnNetworkSpawn()
     {
         if (!IsOwner) { return; }
-        inputReader.MovementEvent += HandleMovement;
+
+        inputReader.MoveEvent += HandleMove;
     }
+
     public override void OnNetworkDespawn()
     {
         if (!IsOwner) { return; }
-        inputReader.MovementEvent -= HandleMovement;
+
+        inputReader.MoveEvent -= HandleMove;
     }
+
     private void Update()
     {
         if (!IsOwner) { return; }
 
         float zRotation = previousMovementInput.x * -turningRate * Time.deltaTime;
-        bodyTranform.Rotate(0f, 0f, zRotation);
+        bodyTransform.Rotate(0f, 0f, zRotation);
     }
+
     private void FixedUpdate()
     {
-     
         if ((transform.position - previousPos).sqrMagnitude > ParticleStopThreshhold)
         {
-            emissionModule.rateOverTime = particleEmissionValue;
+            emissionModule.rateOverTime = emissionRate;
         }
         else
         {
@@ -63,9 +64,10 @@ public class PlayerMovement : NetworkBehaviour
 
         if (!IsOwner) { return; }
 
-        rb.velocity = (Vector2)bodyTranform.up * previousMovementInput.y * movementSpeed;
+        rb.velocity = (Vector2)bodyTransform.up * previousMovementInput.y * movementSpeed;
     }
-    private void HandleMovement(Vector2 movementInput)
+
+    private void HandleMove(Vector2 movementInput)
     {
         previousMovementInput = movementInput;
     }

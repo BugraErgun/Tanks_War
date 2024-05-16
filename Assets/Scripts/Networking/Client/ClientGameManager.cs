@@ -15,13 +15,15 @@ using UnityEngine.SceneManagement;
 
 public class ClientGameManager : IDisposable
 {
-    private const string MenuSceneGame = "Menu";
-
-    private NetworkClient networkClient;
     private JoinAllocation allocation;
 
+    private NetworkClient networkClient;
     private MatchplayMatchmaker matchmaker;
-    public GameData UserData { get; private set; }
+    
+    public UserData UserData { get; private set; }
+
+    private const string MenuSceneName = "Menu";
+
     public async Task<bool> InitAsync()
     {
         await UnityServices.InitializeAsync();
@@ -31,9 +33,9 @@ public class ClientGameManager : IDisposable
 
         AuthState authState = await AuthenticationWrapper.DoAuth();
 
-        if(authState == AuthState.Authenticated)
+        if (authState == AuthState.Authenticated)
         {
-            UserData = new GameData
+            UserData = new UserData
             {
                 userName = PlayerPrefs.GetString(NameSelector.PlayerNameKey, "Missing Name"),
                 userAuthId = AuthenticationService.Instance.PlayerId
@@ -43,22 +45,19 @@ public class ClientGameManager : IDisposable
 
         return false;
     }
+
     public void GoToMenu()
     {
-        SceneManager.LoadScene(MenuSceneGame);
+        SceneManager.LoadScene(MenuSceneName);
     }
-    public async void MatchmakeAsync(bool isTeamQueue, Action<MatchmakerPollingResult> onMatchMakeResponse)
+
+    public void StartClient(string ip, int port)
     {
-        if (matchmaker.IsMatchmaking)
-        {
-            return;
-        }
-
-        UserData.userGamePreferences.gameQueue = isTeamQueue ? GameQueue.Team : GameQueue.Solo;
-
-        MatchmakerPollingResult matchResult = await GetMatchAsync();
-        onMatchMakeResponse?.Invoke(matchResult);
+        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+        transport.SetConnectionData(ip, (ushort)port);
+        ConnectClient();
     }
+
     public async Task StartClientAsync(string joinCode)
     {
         try
@@ -70,6 +69,7 @@ public class ClientGameManager : IDisposable
             Debug.Log(e);
             return;
         }
+
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
         RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
@@ -77,13 +77,7 @@ public class ClientGameManager : IDisposable
 
         ConnectClient();
     }
-    public void StartClient(string ip, int port)
-    {
-        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        transport.SetConnectionData(ip, (ushort)port);
 
-        ConnectClient();
-    }
     private void ConnectClient()
     {
         string payload = JsonUtility.ToJson(UserData);
@@ -93,26 +87,43 @@ public class ClientGameManager : IDisposable
 
         NetworkManager.Singleton.StartClient();
     }
+
+    public async void MatchmakeAsync(bool isTeamQueue, Action<MatchmakerPollingResult> onMatchmakeResponse)
+    {
+        if (matchmaker.IsMatchmaking)
+        {
+            return;
+        }
+
+        UserData.userGamePreferences.gameQueue = isTeamQueue ? GameQueue.Team : GameQueue.Solo;
+        MatchmakerPollingResult matchResult = await GetMatchAsync();
+        onMatchmakeResponse?.Invoke(matchResult);
+    }
+
     private async Task<MatchmakerPollingResult> GetMatchAsync()
     {
         MatchmakingResult matchmakingResult = await matchmaker.Matchmake(UserData);
+
         if (matchmakingResult.result == MatchmakerPollingResult.Success)
         {
             StartClient(matchmakingResult.ip, matchmakingResult.port);
         }
+
         return matchmakingResult.result;
-    }
-    public void Disconnect()
-    {
-        networkClient.Disconnect();
-    }
-    public void Dispose()
-    {
-        networkClient?.Dispose();
     }
 
     public async Task CancelMatchmaking()
     {
         await matchmaker.CancelMatchmaking();
+    }
+
+    public void Disconnect()
+    {
+        networkClient.Disconnect();
+    }
+
+    public void Dispose()
+    {
+        networkClient?.Dispose();
     }
 }

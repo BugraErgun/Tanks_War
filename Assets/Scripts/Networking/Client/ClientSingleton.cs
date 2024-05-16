@@ -7,28 +7,25 @@ public class ClientSingleton : MonoBehaviour
 {
     private static ClientSingleton instance;
 
-    public ClientGameManager GameManager {  get; private set; }
+    public ClientGameManager GameManager { get; private set; }
+
     public static ClientSingleton Instance
     {
         get
         {
-            if(instance != null)
-            { 
-                return instance;
-            }
+            if (instance != null) { return instance; }
 
             instance = FindObjectOfType<ClientSingleton>();
 
-            if(instance == null)
+            if (instance == null)
             {
-                Debug.Log("No ClientSingleton in the scene!");
                 return null;
             }
 
             return instance;
         }
-
     }
+
     private void Start()
     {
         DontDestroyOnLoad(gameObject);

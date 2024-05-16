@@ -1,26 +1,29 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
 using Unity.Collections;
-using System;
+using UnityEngine;
 
 public class PlayerNameDisplay : MonoBehaviour
 {
     [SerializeField] private TankPlayer player;
-    [SerializeField] private TMP_Text displayNameText;
+    [SerializeField] private TMP_Text playerNameText;
+
     private void Start()
     {
-        player.PlayerName.OnValueChanged += HandlePlayerNameChanged;
-
         HandlePlayerNameChanged(string.Empty, player.PlayerName.Value);
+
+        player.PlayerName.OnValueChanged += HandlePlayerNameChanged;
     }
+
+    private void HandlePlayerNameChanged(FixedString32Bytes oldName, FixedString32Bytes newName)
+    {
+        playerNameText.text = newName.ToString();
+    }
+
     private void OnDestroy()
     {
         player.PlayerName.OnValueChanged -= HandlePlayerNameChanged;
-    }
-    private void HandlePlayerNameChanged(FixedString32Bytes oldName, FixedString32Bytes newName)
-    {
-        displayNameText.text = newName.ToString();
     }
 }

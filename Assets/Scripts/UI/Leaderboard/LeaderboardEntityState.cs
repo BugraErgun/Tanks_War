@@ -2,7 +2,7 @@ using System;
 using Unity.Collections;
 using Unity.Netcode;
 
-public struct LeaderboardEntityState : INetworkSerializable,IEquatable<LeaderboardEntityState>
+public struct LeaderboardEntityState : INetworkSerializable, IEquatable<LeaderboardEntityState>
 {
     public ulong ClientId;
     public int TeamIndex;
@@ -15,8 +15,8 @@ public struct LeaderboardEntityState : INetworkSerializable,IEquatable<Leaderboa
         serializer.SerializeValue(ref TeamIndex);
         serializer.SerializeValue(ref PlayerName);
         serializer.SerializeValue(ref Coins);
-
     }
+
     public bool Equals(LeaderboardEntityState other)
     {
         return ClientId == other.ClientId &&

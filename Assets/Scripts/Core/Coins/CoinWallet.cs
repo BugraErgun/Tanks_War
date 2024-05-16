@@ -1,15 +1,17 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
 public class CoinWallet : NetworkBehaviour
 {
-    [Header("Referances")]
+    [Header("References")]
     [SerializeField] private Health health;
     [SerializeField] private BountyCoin coinPrefab;
 
     [Header("Settings")]
-    [SerializeField] private float coinSpread = 3f; 
+    [SerializeField] private float coinSpread = 3f;
     [SerializeField] private float bountyPercentage = 50f;
     [SerializeField] private int bountyCoinCount = 10;
     [SerializeField] private int minBountyCoinValue = 5;
@@ -22,7 +24,7 @@ public class CoinWallet : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if(!IsServer) return;
+        if (!IsServer) { return; }
 
         coinRadius = coinPrefab.GetComponent<CircleCollider2D>().radius;
 
@@ -31,34 +33,33 @@ public class CoinWallet : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        if (!IsServer) return;
-    
+        if (!IsServer) { return; }
+
         health.OnDie -= HandleDie;
     }
+
     public void SpendCoins(int costToFire)
     {
         TotalCoins.Value -= costToFire;
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D col)
     {
-        if (!collision.TryGetComponent<Coin>(out Coin coin)) { return; }
+        if (!col.TryGetComponent<Coin>(out Coin coin)) { return; }
 
         int coinValue = coin.Collect();
 
-        if(!IsServer) { return; }
+        if (!IsServer) { return; }
 
         TotalCoins.Value += coinValue;
     }
+
     private void HandleDie(Health health)
     {
         int bountyValue = (int)(TotalCoins.Value * (bountyPercentage / 100f));
         int bountyCoinValue = bountyValue / bountyCoinCount;
 
-        if (bountyCoinValue < minBountyCoinValue)
-        {
-            return;
-        }
+        if (bountyCoinValue < minBountyCoinValue) { return; }
 
         for (int i = 0; i < bountyCoinCount; i++)
         {
@@ -67,12 +68,12 @@ public class CoinWallet : NetworkBehaviour
             coinInstance.NetworkObject.Spawn();
         }
     }
+
     private Vector2 GetSpawnPoint()
     {
         while (true)
         {
             Vector2 spawnPoint = (Vector2)transform.position + UnityEngine.Random.insideUnitCircle * coinSpread;
-
             int numColliders = Physics2D.OverlapCircleNonAlloc(spawnPoint, coinRadius, coinBuffer, layerMask);
             if (numColliders == 0)
             {

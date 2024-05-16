@@ -56,7 +56,6 @@ public class MatchplayBackfiller : IDisposable
         BackfillLoop();
     }
 
-
     public int RemovePlayerFromMatch(string userId)
     {
         Player playerToRemove = GetPlayerById(userId);
@@ -78,16 +77,16 @@ public class MatchplayBackfiller : IDisposable
         return MatchPlayerCount < maxPlayers;
     }
 
-    private Player GetPlayerById(string userId)
-    {
-        return MatchProperties.Players.FirstOrDefault(
-            p => p.Id.Equals(userId));
-    }
-
     public Team GetTeamByUserId(string userId)
     {
         return MatchProperties.Teams.FirstOrDefault(
             t => t.PlayerIds.Contains(userId));
+    }
+
+    private Player GetPlayerById(string userId)
+    {
+        return MatchProperties.Players.FirstOrDefault(
+            p => p.Id.Equals(userId));
     }
 
     public async Task StopBackfill()

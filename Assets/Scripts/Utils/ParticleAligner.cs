@@ -6,6 +6,7 @@ using UnityEngine;
 public class ParticleAligner : MonoBehaviour
 {
     private ParticleSystem.MainModule psMain;
+
     private void Start()
     {
         psMain = GetComponent<ParticleSystem>().main;
@@ -15,4 +16,4 @@ public class ParticleAligner : MonoBehaviour
     {
         psMain.startRotation = -transform.rotation.eulerAngles.z * Mathf.Deg2Rad;
     }
-}  
+}

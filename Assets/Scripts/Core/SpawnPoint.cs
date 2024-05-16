@@ -10,14 +10,16 @@ public class SpawnPoint : MonoBehaviour
     {
         spawnPoints.Add(this);
     }
+
     private void OnDisable()
     {
         spawnPoints.Remove(this);
     }
+
     public static Vector3 GetRandomSpawnPos()
     {
-        if (spawnPoints.Count == 0)
-        { 
+        if(spawnPoints.Count == 0)
+        {
             return Vector3.zero;
         }
 
@@ -27,6 +29,6 @@ public class SpawnPoint : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.blue;
-        Gizmos.DrawSphere(transform.position, 1f);
+        Gizmos.DrawSphere(transform.position, 1);
     }
 }

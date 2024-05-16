@@ -12,7 +12,6 @@ public class GameHUD : NetworkBehaviour
 
     private NetworkVariable<FixedString32Bytes> lobbyCode = new NetworkVariable<FixedString32Bytes>("");
 
-
     public override void OnNetworkSpawn()
     {
         if (IsClient)
@@ -21,13 +20,9 @@ public class GameHUD : NetworkBehaviour
             HandleLobbyCodeChanged(string.Empty, lobbyCode.Value);
         }
 
-        if (!IsHost)
-        {
-            return;
-        }
+        if (!IsHost) { return; }
 
         lobbyCode.Value = HostSingleton.Instance.GameManager.JoinCode;
-
     }
 
     public override void OnNetworkDespawn()
@@ -37,9 +32,9 @@ public class GameHUD : NetworkBehaviour
             lobbyCode.OnValueChanged -= HandleLobbyCodeChanged;
         }
     }
-    public void QuitGame()
-    {
 
+    public void LeaveGame()
+    {
         if (NetworkManager.Singleton.IsHost)
         {
             HostSingleton.Instance.GameManager.Shutdown();
@@ -47,6 +42,7 @@ public class GameHUD : NetworkBehaviour
 
         ClientSingleton.Instance.GameManager.Disconnect();
     }
+
     private void HandleLobbyCodeChanged(FixedString32Bytes oldCode, FixedString32Bytes newCode)
     {
         lobbyCodeText.text = newCode.ToString();

@@ -17,7 +17,7 @@ public enum GameQueue
 }
 
 [Serializable]
-public class GameData
+public class UserData
 {
     public string userName;
     public string userAuthId;
@@ -38,7 +38,7 @@ public class GameInfo
         {
             GameQueue.Solo => "solo-queue",
             GameQueue.Team => "team-queue",
-            _=> "solo-queue"
+            _ => "solo-queue"
         };
     }
 }

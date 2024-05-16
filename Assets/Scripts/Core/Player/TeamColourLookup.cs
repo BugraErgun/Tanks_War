@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewTeamColorLookup",menuName = "Team Colour Lookup")]
+[CreateAssetMenu(fileName = "NewTeamColourLookup", menuName = "Team Colour Lookup")]
 public class TeamColourLookup : ScriptableObject
 {
     [SerializeField] private Color[] teamColours;
@@ -18,5 +18,4 @@ public class TeamColourLookup : ScriptableObject
             return teamColours[teamIndex];
         }
     }
-
 }

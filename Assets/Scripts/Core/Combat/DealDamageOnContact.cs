@@ -1,21 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using Unity.Netcode;
+using UnityEngine;
 
 public class DealDamageOnContact : MonoBehaviour
 {
-    [SerializeField] private int damage = 10;
-
     [SerializeField] private Projectile projectile;
+    [SerializeField] private int damage = 5;
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D col)
     {
-        if (collision.attachedRigidbody == null) return;
+        if (col.attachedRigidbody == null) { return; }
 
         if (projectile.TeamIndex != -1)
         {
-            if (collision.attachedRigidbody.TryGetComponent<TankPlayer>(out TankPlayer player))
+            if (col.attachedRigidbody.TryGetComponent<TankPlayer>(out TankPlayer player))
             {
                 if (player.TeamIndex.Value == projectile.TeamIndex)
                 {
@@ -24,7 +23,7 @@ public class DealDamageOnContact : MonoBehaviour
             }
         }
 
-        if (collision.attachedRigidbody.TryGetComponent < Health>(out Health health))
+        if (col.attachedRigidbody.TryGetComponent<Health>(out Health health))
         {
             health.TakeDamage(damage);
         }

@@ -15,8 +15,10 @@ public class RespawningCoin : Coin
         {
             Show(true);
         }
+
         previousPosition = transform.position;
     }
+
     public override int Collect()
     {
         if (!IsServer)
@@ -24,13 +26,13 @@ public class RespawningCoin : Coin
             Show(false);
             return 0;
         }
-        if(alreadyCollected)
-        {
-            return 0;
-        }
+
+        if (alreadyCollected) { return 0; }
 
         alreadyCollected = true;
+
         OnCollected?.Invoke(this);
+
         return coinValue;
     }
 

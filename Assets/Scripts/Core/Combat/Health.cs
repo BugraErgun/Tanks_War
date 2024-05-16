@@ -38,7 +38,7 @@ public class Health : NetworkBehaviour
         int newHealth = CurrentHealth.Value + value;
         CurrentHealth.Value = Mathf.Clamp(newHealth, 0, MaxHealth);
 
-        if (CurrentHealth.Value == 0)
+        if(CurrentHealth.Value == 0)
         {
             OnDie?.Invoke(this);
             isDead = true;

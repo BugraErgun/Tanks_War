@@ -7,18 +7,14 @@ using UnityEngine.SceneManagement;
 
 public class ApplicationController : MonoBehaviour
 {
-    private const string GameSceneName = "Game";
-
     [SerializeField] private ClientSingleton clientPrefab;
-
     [SerializeField] private HostSingleton hostPrefab;
-
     [SerializeField] private ServerSingleton serverPrefab;
-
     [SerializeField] private NetworkObject playerPrefab;
 
-
     private ApplicationData appData;
+
+    private const string GameSceneName = "Game";
 
     private async void Start()
     {
@@ -29,7 +25,7 @@ public class ApplicationController : MonoBehaviour
 
     private async Task LaunchInMode(bool isDedicatedServer)
     {
-        if(isDedicatedServer)
+        if (isDedicatedServer)
         {
             Application.targetFrameRate = 60;
 
@@ -47,7 +43,7 @@ public class ApplicationController : MonoBehaviour
             ClientSingleton clientSingleton = Instantiate(clientPrefab);
             bool authenticated = await clientSingleton.CreateClient();
 
-            if(authenticated)
+            if (authenticated)
             {
                 clientSingleton.GameManager.GoToMenu();
             }
@@ -69,5 +65,4 @@ public class ApplicationController : MonoBehaviour
         Task startServerTask = serverSingleton.GameManager.StartGameServerAsync();
         yield return new WaitUntil(() => startServerTask.IsCompleted);
     }
-
 }

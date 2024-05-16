@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static Controls;
@@ -6,9 +8,8 @@ using static Controls;
 [CreateAssetMenu(fileName = "New Input Reader", menuName = "Input/Input Reader")]
 public class InputReader : ScriptableObject, IPlayerActions
 {
+    public event Action<Vector2> MoveEvent;
     public event Action<bool> PrimaryFireEvent;
-
-    public event Action<Vector2> MovementEvent;
 
     public Vector2 AimPosition { get; private set; }
 
@@ -21,11 +22,13 @@ public class InputReader : ScriptableObject, IPlayerActions
             controls = new Controls();
             controls.Player.SetCallbacks(this);
         }
+
         controls.Player.Enable();
     }
+
     public void OnMove(InputAction.CallbackContext context)
     {
-        MovementEvent?.Invoke(context.ReadValue<Vector2>());
+        MoveEvent?.Invoke(context.ReadValue<Vector2>());
     }
 
     public void OnPrimaryFire(InputAction.CallbackContext context)

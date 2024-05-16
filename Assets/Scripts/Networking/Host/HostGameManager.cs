@@ -1,30 +1,31 @@
-using System.Threading.Tasks;
-using Unity.Services.Relay;
-using UnityEngine;
 using System;
-using Unity.Services.Relay.Models;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
-using UnityEngine.SceneManagement;
-using Unity.Services.Lobbies;
-using System.Collections.Generic;
-using Unity.Services.Lobbies.Models;
-using System.Collections;
-using System.Text;
 using Unity.Services.Authentication;
+using Unity.Services.Lobbies;
+using Unity.Services.Lobbies.Models;
+using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
 public class HostGameManager : IDisposable
 {
-    private const int Max_Connections = 20;
-    private const string GameSceneName = "Game";
-
+    private Allocation allocation;
     private NetworkObject playerPrefab;
 
-    public NetworkServer NetworkServer { get; private set; }
-    public string JoinCode { get; private set; }
-
-    private Allocation allocation;
     private string lobbyId;
+
+    public string JoinCode { get; private set; }
+    public NetworkServer NetworkServer { get; private set; }
+
+    private const int MaxConnections = 20;
+    private const string GameSceneName = "Game";
 
     public HostGameManager(NetworkObject playerPrefab)
     {
@@ -35,7 +36,7 @@ public class HostGameManager : IDisposable
     {
         try
         {
-            allocation = await Relay.Instance.CreateAllocationAsync(Max_Connections);
+            allocation = await Relay.Instance.CreateAllocationAsync(MaxConnections);
         }
         catch (Exception e)
         {
@@ -56,44 +57,43 @@ public class HostGameManager : IDisposable
 
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
-        //udp or dtls
         RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
         transport.SetRelayServerData(relayServerData);
 
         try
         {
-            CreateLobbyOptions createLobbyOptions = new CreateLobbyOptions();
-            createLobbyOptions.IsPrivate = isPrivate;
-            createLobbyOptions.Data = new Dictionary<string, DataObject>()
+            CreateLobbyOptions lobbyOptions = new CreateLobbyOptions();
+            lobbyOptions.IsPrivate = isPrivate;
+            lobbyOptions.Data = new Dictionary<string, DataObject>()
             {
                 {
-                    "JoinCode" , new DataObject(
-                        visibility:DataObject.VisibilityOptions.Member,
-                        value:JoinCode
+                    "JoinCode", new DataObject(
+                        visibility: DataObject.VisibilityOptions.Member,
+                        value: JoinCode
                     )
                 }
             };
-            string playerName = PlayerPrefs.GetString(NameSelector.PlayerNameKey, "Missing Name");
-            Lobby lobby = await Lobbies.Instance.CreateLobbyAsync($"{playerName}'s Lobby", Max_Connections, createLobbyOptions);
+            string playerName = PlayerPrefs.GetString(NameSelector.PlayerNameKey, "Unknown");
+            Lobby lobby = await Lobbies.Instance.CreateLobbyAsync(
+                $"{playerName}'s Lobby", MaxConnections, lobbyOptions);
+
             lobbyId = lobby.Id;
 
-            HostSingleton.Instance.StartCoroutine(HeartbeatLobby(15));
+            HostSingleton.Instance.StartCoroutine(HearbeatLobby(15));
         }
         catch (LobbyServiceException e)
         {
-
             Debug.Log(e);
             return;
         }
 
         NetworkServer = new NetworkServer(NetworkManager.Singleton, playerPrefab);
 
-        GameData userData = new GameData
+        UserData userData = new UserData
         {
             userName = PlayerPrefs.GetString(NameSelector.PlayerNameKey, "Missing Name"),
             userAuthId = AuthenticationService.Instance.PlayerId
         };
-
         string payload = JsonUtility.ToJson(userData);
         byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
 
@@ -106,9 +106,9 @@ public class HostGameManager : IDisposable
         NetworkManager.Singleton.SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
     }
 
-    private IEnumerator HeartbeatLobby(float waitTimeSecons)
+    private IEnumerator HearbeatLobby(float waitTimeSeconds)
     {
-        WaitForSecondsRealtime delay = new WaitForSecondsRealtime(waitTimeSecons);
+        WaitForSecondsRealtime delay = new WaitForSecondsRealtime(waitTimeSeconds);
         while (true)
         {
             Lobbies.Instance.SendHeartbeatPingAsync(lobbyId);
@@ -125,7 +125,7 @@ public class HostGameManager : IDisposable
     {
         if (string.IsNullOrEmpty(lobbyId)) { return; }
 
-        HostSingleton.Instance.StopCoroutine(nameof(HeartbeatLobby));
+        HostSingleton.Instance.StopCoroutine(nameof(HearbeatLobby));
 
         try
         {
@@ -135,8 +135,8 @@ public class HostGameManager : IDisposable
         {
             Debug.Log(e);
         }
-        lobbyId = string.Empty;
 
+        lobbyId = string.Empty;
 
         NetworkServer.OnClientLeft -= HandleClientLeft;
 
@@ -151,7 +151,6 @@ public class HostGameManager : IDisposable
         }
         catch (LobbyServiceException e)
         {
-
             Debug.Log(e);
         }
     }
